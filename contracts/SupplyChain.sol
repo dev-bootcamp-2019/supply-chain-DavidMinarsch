@@ -26,9 +26,9 @@ contract SupplyChain {
     string name;
     uint sku;
     uint price; // in Wei
-    string state;
-    address seller;
-    address buyer;
+    uint state;
+    address payable seller;
+    address payable buyer;
   }
 
   /* Add a line that creates a public mapping that maps the SKU (a number) to an Item.
@@ -58,10 +58,10 @@ contract SupplyChain {
   /* For each of the following modifiers, use what you learned about modifiers
    to give them functionality. For example, the forSale modifier should require
    that the item with the given sku has the state ForSale. */
-  modifier forSale (uint _sku) { require (items[_sku].state == State.ForSale); _;}
-  modifier sold (uint _sku) { require (items[_sku].state == State.Sold); _;}
-  modifier shipped (uint _sku) { require (items[_sku].state == State.Shipped); _;}
-  modifier received (uint _sku) { require (items[_sku].state == State.Received); _;}
+  modifier forSale (uint _sku) { require (items[_sku].state == uint(State.ForSale)); _;}
+  modifier sold (uint _sku) { require (items[_sku].state == uint(State.Sold)); _;}
+  modifier shipped (uint _sku) { require (items[_sku].state == uint(State.Shipped)); _;}
+  modifier received (uint _sku) { require (items[_sku].state == uint(State.Received)); _;}
 
 
   constructor() public {
@@ -73,7 +73,7 @@ contract SupplyChain {
 
   function addItem(string memory _name, uint _price) public returns(bool){
     emit LogForSale(skuCount);
-    items[skuCount] = Item({name: _name, sku: skuCount, price: _price, state: State.ForSale, seller: msg.sender, buyer: address(0)});
+    items[skuCount] = Item({name: _name, sku: skuCount, price: _price, state: uint(State.ForSale), seller: msg.sender, buyer: address(0)});
     skuCount = skuCount + 1;
     return true;
   }
@@ -92,7 +92,7 @@ contract SupplyChain {
     checkValue(sku)
   {
     items[sku].buyer = msg.sender;
-    items.state = State.Sold;
+    items[sku].state = uint(State.Sold);
     items[sku].seller.transfer(items[sku].price);
     emit LogSold(sku);
   }
@@ -104,7 +104,7 @@ contract SupplyChain {
     sold(sku)
     verifyCaller(items[sku].seller)
   {
-    items[sku].state = State.Shipped;
+    items[sku].state = uint(State.Shipped);
     emit LogShipped(sku);
   }
 
@@ -115,7 +115,7 @@ contract SupplyChain {
     shipped(sku)
     verifyCaller(items[sku].buyer)
   {
-    items[sku].state = State.Received;
+    items[sku].state = uint(State.Received);
     emit LogReceived(sku);
   }
 
@@ -124,7 +124,7 @@ contract SupplyChain {
     name = items[_sku].name;
     sku = items[_sku].sku;
     price = items[_sku].price;
-    state = uint(items[_sku].state);
+    state = items[_sku].state;
     seller = items[_sku].seller;
     buyer = items[_sku].buyer;
     return (name, sku, price, state, seller, buyer);
